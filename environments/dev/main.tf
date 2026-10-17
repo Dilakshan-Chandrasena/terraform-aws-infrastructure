@@ -33,7 +33,7 @@ module "security_groups" {
   name     = "tf-platform-dev"
   vpc_id   = module.vpc.vpc_id
   app_port = 8080
-    # Temporary access for direct ECS testing
+  # Temporary access for direct ECS testing
   test_client_cidr = "116.206.244.137/32"
 
   tags = {
