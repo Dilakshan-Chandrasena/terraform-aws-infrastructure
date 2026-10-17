@@ -73,3 +73,14 @@ resource "aws_vpc_security_group_egress_rule" "app_all_outbound" {
   cidr_ipv4         = "0.0.0.0/0"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "app_temporary_test" {
+  count = var.test_client_cidr == null ? 0 : 1
+
+  security_group_id = aws_security_group.app.id
+  description       = "Temporary direct access for ECS testing"
+
+  ip_protocol = "tcp"
+  from_port   = var.app_port
+  to_port     = var.app_port
+  cidr_ipv4   = var.test_client_cidr
+}

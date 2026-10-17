@@ -25,3 +25,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "test_client_cidr" {
+  description = "Public IPv4 CIDR allowed to test the application directly"
+  type        = string
+  default     = null
+}
