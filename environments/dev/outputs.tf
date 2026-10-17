@@ -38,3 +38,18 @@ output "ecr_repository_arn" {
   description = "ECR repository ARN"
   value       = module.ecr.repository_arn
 }
+
+output "ecs_cluster_name" {
+  description = "Development ECS cluster name"
+  value       = module.ecs.cluster_name
+}
+
+output "ecs_cluster_arn" {
+  description = "Development ECS cluster ARN"
+  value       = module.ecs.cluster_arn
+}
+
+output "ecs_task_execution_role_arn" {
+  description = "ECS task execution role ARN"
+  value       = module.ecs.task_execution_role_arn
+}

@@ -52,3 +52,16 @@ module "ecr" {
     Owner       = "devops-interview"
   }
 }
+
+
+# ECS module for container orchestration
+module "ecs" {
+  source = "../../modules/ecs"
+
+  name = "tf-platform-dev"
+
+  tags = {
+    Environment = "dev"
+    Owner       = "devops-interview-dev"
+  }
+}
