@@ -26,21 +26,21 @@ resource "aws_ecr_repository" "this" {
 resource "aws_ecr_lifecycle_policy" "this" {
   repository = aws_ecr_repository.this.name
 
-    policy = jsonencode({
-        rules = [{
-        rulePriority = 1
-        description  = "Expire untagged images older than the configured retention period"
+  policy = jsonencode({
+    rules = [{
+      rulePriority = 1
+      description  = "Expire untagged images older than the configured retention period"
 
-        selection = {
-            tagStatus   = "untagged"
-            countType   = "sinceImagePushed"
-            countUnit   = "days"
-            countNumber = var.untagged_image_retention_days
-        }
+      selection = {
+        tagStatus   = "untagged"
+        countType   = "sinceImagePushed"
+        countUnit   = "days"
+        countNumber = var.untagged_image_retention_days
+      }
 
-        action = {
-            type = "expire"
-        }
-        }]
-    })
+      action = {
+        type = "expire"
+      }
+    }]
+  })
 }
