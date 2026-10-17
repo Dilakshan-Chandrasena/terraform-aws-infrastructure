@@ -1,0 +1,82 @@
+
+name: Build and Push Docker Image to ECR
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "app/**"
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/docker-ecr.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: tf-platform-dev-app
+
+jobs:
+  build-test-push:
+    name: Build, Test and Push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t tf-platform-dev-app:${GITHUB_SHA} .
+
+      - name: Run container
+        run: |
+          docker run -d \
+            --name tf-platform-test \
+            -p 5000:5000 \
+            tf-platform-dev-app:${GITHUB_SHA}
+
+      - name: Test application health
+        run: |
+          for i in {1..10}; do
+            if curl --fail http://localhost:5000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker logs tf-platform-test
+          exit 1
+
+      - name: Stop test container
+        if: always()
+        run: docker rm -f tf-platform-test || true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Tag and push image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${GITHUB_SHA}"
+
+          docker tag \
+            "tf-platform-dev-app:${GITHUB_SHA}" \
+            "${IMAGE_URI}"
+
+          docker push "${IMAGE_URI}"
+
+          echo "Published image: ${IMAGE_URI}"
