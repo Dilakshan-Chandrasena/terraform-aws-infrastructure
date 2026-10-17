@@ -1,5 +1,5 @@
 
-name: Terraform CI
+name: Terraform CI/CD
 
 on:
   pull_request:
@@ -44,11 +44,11 @@ jobs:
       - name: Check Terraform formatting
         run: terraform fmt -check -recursive
 
-      - name: Initialize Terraform without backend
+      - name: Initialize without backend
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init -backend=false
 
-      - name: Validate Terraform configuration
+      - name: Validate Terraform
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform validate
 
@@ -79,6 +79,54 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init
 
-      - name: Generate Terraform plan
+      - name: Generate saved plan
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform plan -no-color
+        run: terraform plan -no-color -out=tfplan
+
+      - name: Upload saved plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: environments/dev/tfplan
+          retention-days: 1
+          if-no-files-found: error
+
+  apply:
+    name: Approved Terraform apply
+    if: github.event_name != 'pull_request'
+    needs: plan
+    runs-on: ubuntu-latest
+
+    environment:
+      name: dev-apply
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Download saved plan
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: environments/dev
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Initialize Terraform
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Apply saved plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -no-color tfplan
