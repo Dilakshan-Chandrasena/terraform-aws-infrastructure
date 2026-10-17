@@ -8,3 +8,8 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "ecr_image_uri" {
+  description = "Full ECR image URI, including the immutable image tag"
+  type        = string
+}

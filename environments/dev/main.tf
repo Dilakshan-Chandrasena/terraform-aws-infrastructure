@@ -60,6 +60,8 @@ module "ecs" {
 
   name = "tf-platform-dev"
 
+  ecr_image_uri = "${module.ecr.repository_url}:ca2383cdf55a19325c96c9e4129c45cf224ce4ff"
+
   tags = {
     Environment = "dev"
     Owner       = "devops-interview-dev"

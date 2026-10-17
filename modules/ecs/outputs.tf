@@ -17,3 +17,13 @@ output "task_execution_role_arn" {
   description = "IAM role ARN used by ECS to pull images and publish logs"
   value       = aws_iam_role.task_execution.arn
 }
+
+output "task_definition_arn" {
+  description = "ECS task definition ARN"
+  value       = aws_ecs_task_definition.this.arn
+}
+
+output "log_group_name" {
+  description = "CloudWatch log group name"
+  value       = aws_cloudwatch_log_group.this.name
+}
