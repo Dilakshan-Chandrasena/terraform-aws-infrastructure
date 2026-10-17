@@ -1,0 +1,84 @@
+
+name: Terraform CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "modules/**"
+      - "environments/dev/**"
+      - ".github/workflows/terraform.yml"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "modules/**"
+      - "environments/dev/**"
+      - ".github/workflows/terraform.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_WORKING_DIR: environments/dev
+  AWS_REGION: us-east-1
+
+jobs:
+  validate:
+    name: Format and validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive
+
+      - name: Initialize Terraform without backend
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -backend=false
+
+      - name: Validate Terraform configuration
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform validate
+
+  plan:
+    name: Terraform plan
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Initialize Terraform
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Generate Terraform plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -no-color
