@@ -1,0 +1,17 @@
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Expire untagged images older than the configured retention period",
+      "selection": {
+        "tagStatus": "untagged",
+        "countType": "sinceImagePushed",
+        "countUnit": "days",
+        "countNumber": ${retention_days}
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
