@@ -38,7 +38,7 @@ jobs:
         run: |
           docker run -d \
             --name tf-platform-test \
-            -p 5000:5000 \
+            -p 8080:8080 \
             tf-platform-dev-app:${GITHUB_SHA}
 
       - name: Test application health
