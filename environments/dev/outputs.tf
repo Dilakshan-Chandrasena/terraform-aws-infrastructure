@@ -63,3 +63,8 @@ output "ecs_log_group_name" {
   description = "Development ECS CloudWatch log group"
   value       = module.ecs.log_group_name
 }
+
+output "alb_url" {
+  description = "HTTP URL for the application"
+  value       = "http://${module.alb.alb_dns_name}"
+}

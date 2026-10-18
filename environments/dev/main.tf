@@ -65,6 +65,22 @@ module "ecs" {
   ecr_image_uri     = "${module.ecr.repository_url}:ca2383cdf55a19325c96c9e4129c45cf224ce4ff"
   subnet_ids        = module.vpc.public_subnet_ids
   security_group_id = module.security_groups.app_security_group_id
+  target_group_arn  = module.alb.target_group_arn
+  tags = {
+    Environment = "dev"
+    Owner       = "devops-interview-dev"
+  }
+}
+
+# Provision an Application Load Balancer for the Flask application
+module "alb" {
+  source = "../../modules/alb"
+
+  name                  = "tf-platform-dev"
+  vpc_id                = module.vpc.vpc_id
+  public_subnet_ids     = module.vpc.public_subnet_ids
+  alb_security_group_id = module.security_groups.alb_security_group_id
+  app_port              = 8080
 
   tags = {
     Environment = "dev"
